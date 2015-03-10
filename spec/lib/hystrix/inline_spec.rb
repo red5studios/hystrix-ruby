@@ -35,8 +35,8 @@ describe Hystrix::InlineDSL do
 		mock.should_receive(:check).with('sup')
 
 		Hystrix.configure do
-			on_success do |command_name, duration|
-				mock.check(command_name)
+			on_success do |params|
+				mock.check(params[:executor_pool_name])
 			end
 		end
 

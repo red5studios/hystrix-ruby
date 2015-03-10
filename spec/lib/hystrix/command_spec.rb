@@ -72,9 +72,9 @@ describe Hystrix::Command do
 			test_duration = nil
 
 			Hystrix.configure do
-				on_success do |command_name, duration|
-					test_name = command_name
-					test_duration = duration
+				on_success do |params|
+					test_name = params[:command_name]
+					test_duration = params[:duration]
 				end
 			end
 
@@ -90,10 +90,10 @@ describe Hystrix::Command do
 			test_error = nil
 
 			Hystrix.configure do
-				on_fallback do |command_name, duration, error|
-					test_name = command_name
-					test_duration = duration
-					test_error = error
+				on_fallback do |params|
+					test_name = params[:command_name]
+					test_duration = params[:duration]
+					test_error = params[:error]
 				end
 			end
 
@@ -116,10 +116,10 @@ describe Hystrix::Command do
 			end
 
 			Hystrix.configure do
-				on_failure do |command_name, duration, error|
-					test_name = command_name
-					test_duration = duration
-					test_error = error
+				on_failure do |params|
+					test_name = params[:command_name]
+					test_duration = params[:duration]
+					test_error = params[:error]
 				end
 			end
 
@@ -154,7 +154,7 @@ describe Hystrix::Command do
 
 		it 'sends exception to fallback method on error' do
 			c = CommandHelloWorld.new('keith', 0, true)
-			c.wrapped_object.should_receive(:fallback).with do |error|
+			c.wrapped_object.should_receive(:fallback) do |error|
 				error.message.should == 'error'
 			end
 			c.execute

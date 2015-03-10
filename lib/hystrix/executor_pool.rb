@@ -1,4 +1,5 @@
 require 'singleton'
+require 'securerandom'
 
 module Hystrix
 	class CommandExecutorPools
@@ -14,6 +15,9 @@ module Hystrix
 		def get_pool(pool_name, size = nil)
 			lock.synchronize do
 				pools[pool_name] ||= CommandExecutorPool.new(pool_name, size || 10)
+				pools[pool_name].set_size(size || 10)
+
+				return pools[pool_name]
 			end
 		end
 
@@ -28,42 +32,61 @@ module Hystrix
 
 	class CommandExecutorPool
 		attr_accessor :name, :size
-		attr_accessor :executors, :lock
+		attr_accessor :executors, :locked_executors, :lock
 		attr_accessor :circuit_supervisor
+		attr_reader :uuid
 
 		def initialize(name, size)
+			@uuid = SecureRandom.uuid
+
 			self.name = name
 			self.size = size
-			self.executors = []
+			self.executors = {}
+			self.locked_executors = {}
 			self.lock = Mutex.new
 			self.circuit_supervisor = Circuit.supervise
 			size.times do
-				self.executors << CommandExecutor.new
+				e = CommandExecutor.new(self)
+				self.executors[e.uuid] = e
+			end
+		end
+
+		def set_size(size)
+			self.size = size
+			if size > self.size
+				(size - self.size).times do
+					e = CommandExecutor.new(self)
+					self.executors[e.uuid] = e
+				end
+				self.size = size
 			end
 		end
 
 		def take
-			lock.synchronize do
-				for executor in self.executors
-					unless executor.locked?
-						executor.lock
-						return executor
-					end
-				end
-			end
+			raise ExecutorPoolFullError.new("Unable to get executor from #{self.name} pool. [#{self.locked_executors.size} locked] [#{@uuid}]") unless self.executors.count > 0
 
-			raise ExecutorPoolFullError.new("Unable to get executor from #{self.name} pool.")
+			lock.synchronize do
+				raise ExecutorPoolFullError.new("Unable to get executor from #{self.name} pool. [#{self.locked_executors.size} locked] [#{@uuid}]") unless self.executors.count > 0
+				uuid, executor = self.executors.first
+				executor.lock
+
+				self.executors.delete(executor.uuid)
+				self.locked_executors[executor.uuid] = executor
+
+				return executor
+			end
+		end
+
+		def release(executor)
+			self.locked_executors.delete(executor.uuid)
+			self.executors[executor.uuid] = executor
 		end
 
 		def shutdown
 			lock.synchronize do
-				until executors.size == 0 do
-					for i in (0...executors.size)
-						unless executors[i].locked?
-							executors[i] = nil
-						end
-					end
-					executors.compact!
+				self.executors = {}
+				until (self.executors.size + self.locked_executors.size) == 0 do
+					self.executors = {}
 					sleep 0.1
 				end
 			end
@@ -72,8 +95,12 @@ module Hystrix
 
 	class CommandExecutor
 		attr_accessor :owner
+		attr_reader :uuid, :pool
 
-		def initialize
+		def initialize(pool)
+			@uuid = SecureRandom.uuid
+			@pool = pool
+
 			self.owner = nil
 		end
 
@@ -83,6 +110,7 @@ module Hystrix
 
 		def unlock
 			self.owner = nil
+			self.pool.release(self) if self.pool
 		end
 		
 		def locked?

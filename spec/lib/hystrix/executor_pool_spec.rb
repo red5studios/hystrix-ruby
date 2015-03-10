@@ -1,7 +1,11 @@
 require 'spec_helper'
 
 describe Hystrix::CommandExecutor do
-	let(:executor) { Hystrix::CommandExecutor.new }
+	let(:executor) { Hystrix::CommandExecutor.new(Hystrix::CommandExecutorPool.new('test',0)) }
+
+	it 'has a uuid' do
+		executor.uuid.length.should == 36
+	end
 
 	it 'can be locked' do
 		executor.locked?.should == false
@@ -23,6 +27,13 @@ end
 describe Hystrix::CommandExecutorPool do
 	it 'creates pool objects when constructed' do
 		Hystrix::CommandExecutorPool.new('test', 10).executors.size.should == 10
+	end
+
+	context '.uuid' do
+		it 'generates a UUID on creation' do
+			pool = Hystrix::CommandExecutorPool.new('test', 1)
+			pool.uuid.length.should == 36
+		end
 	end
 
 	context '.take' do

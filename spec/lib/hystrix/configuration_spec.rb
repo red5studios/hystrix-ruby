@@ -7,13 +7,13 @@ describe Hystrix::Configuration do
 
 	it 'defines callbacks via dsl' do
 		Hystrix.configure do
-			on_success do |command_name, duration|
+			on_success do |params|
 				raise 'callback'
 			end
 		end
 
 		expect {
-			Hystrix::Configuration.notify_success('test', 30)
+			Hystrix::Configuration.notify_success({})
 		}.to raise_error('callback')
 	end
 end

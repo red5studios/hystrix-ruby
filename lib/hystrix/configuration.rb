@@ -3,27 +3,27 @@ module Hystrix
 		def self.on_success(&block)
 			@on_success = block
 		end
-		def self.notify_success(command_name, duration)
+		def self.notify_success(params)
 			if @on_success
-				@on_success.call(command_name, duration)
+				@on_success.call(params)
 			end
 		end
 
 		def self.on_fallback(&block)
 			@on_fallback = block
 		end
-		def self.notify_fallback(command_name, duration, error)
+		def self.notify_fallback(params)
 			if @on_fallback
-				@on_fallback.call(command_name, duration, error)
+				@on_fallback.call(params)
 			end
 		end
 
 		def self.on_failure(&block)
 			@on_failure = block
 		end
-		def self.notify_failure(command_name, duration, error)
+		def self.notify_failure(params)
 			if @on_failure
-				@on_failure.call(command_name, duration, error)
+				@on_failure.call(params)
 			end
 		end
 
