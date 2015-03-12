@@ -1,15 +1,16 @@
 PATH
   remote: .
   specs:
-    hystrix-ruby (0.0.1)
+    hystrix-ruby (0.1.0)
       celluloid (>= 0.13.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    celluloid (0.15.2)
-      timers (~> 1.1.0)
+    celluloid (0.16.0)
+      timers (~> 4.0.0)
     diff-lcs (1.2.4)
+    hitimes (1.2.2)
     multi_json (1.8.2)
     rspec (2.14.1)
       rspec-core (~> 2.14.0)
@@ -26,7 +27,8 @@ GEM
     simplecov-rcov (0.2.3)
       simplecov (>= 0.4.1)
     timecop (0.6.3)
-    timers (1.1.0)
+    timers (4.0.1)
+      hitimes
 
 PLATFORMS
   ruby
