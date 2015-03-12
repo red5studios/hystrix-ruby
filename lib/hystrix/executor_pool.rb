@@ -44,7 +44,7 @@ module Hystrix
 			self.executors = {}
 			self.locked_executors = {}
 			self.lock = Mutex.new
-			self.circuit_supervisor = Circuit.supervise
+			self.circuit_supervisor = Circuit.supervise(self.name)
 			size.times do
 				e = CommandExecutor.new(self)
 				self.executors[e.uuid] = e

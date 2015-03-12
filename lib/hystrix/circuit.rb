@@ -3,13 +3,14 @@ module Hystrix
 	class Circuit
 		include Celluloid
 
-		attr_accessor :lock, :health, :recent_latency_errors, :last_health_check_time
+		attr_accessor :lock, :health, :recent_latency_errors, :last_health_check_time, :command_pool
 
-		def initialize
+		def initialize(command_pool)
 			self.lock = Mutex.new
 			self.recent_latency_errors = []
 			self.health = 0
 			self.last_health_check_time = nil
+			self.command_pool = command_pool
 		end
 
 		def is_closed?

@@ -3,12 +3,12 @@ require 'spec_helper'
 describe Hystrix::Circuit do
 	context 'health threshold, ' do
 		it 'is healthy if no commands have reported latency errors' do
-			circuit = Hystrix::Circuit.new
+			circuit = Hystrix::Circuit.new("test")
 			circuit.is_healthy?.should == true
 		end
 
 		it 'becomes unhealthy if X commands are slow within the last Y seconds.' do
-			circuit = Hystrix::Circuit.new
+			circuit = Hystrix::Circuit.new("test")
 			5.times do
 				circuit.add_latency_error(rand(10))
 			end
@@ -16,13 +16,13 @@ describe Hystrix::Circuit do
 		end
 
 		it 'opens the circuit when unhealthy' do
-			circuit = Hystrix::Circuit.new
+			circuit = Hystrix::Circuit.new("test")
 			circuit.wrapped_object.stub(:is_healthy?).and_return(false)
 			circuit.is_closed?.should == false
 		end
 
 		it 'prunes old latency errors over time' do
-			circuit = Hystrix::Circuit.new
+			circuit = Hystrix::Circuit.new("test")
 			now = Time.now
 			13.times do |i|
 				Timecop.freeze(now - i) do
@@ -37,7 +37,7 @@ describe Hystrix::Circuit do
 		end
 
 		it 'doesnt recalculate health every closed check' do
-			circuit = Hystrix::Circuit.new
+			circuit = Hystrix::Circuit.new("test")
 			circuit.wrapped_object.should_receive(:calculate_health).once.and_call_original
 			now = Time.now
 			
@@ -49,7 +49,7 @@ describe Hystrix::Circuit do
 		end
 
 		it 'only recalculates health every X seconds' do
-			circuit = Hystrix::Circuit.new
+			circuit = Hystrix::Circuit.new("test")
 			circuit.wrapped_object.should_receive(:calculate_health).twice.and_call_original
 			now = Time.now
 			
@@ -61,7 +61,7 @@ describe Hystrix::Circuit do
 		end
 
 		it 'allows the health to return back to 0' do
-			circuit = Hystrix::Circuit.new
+			circuit = Hystrix::Circuit.new("test")
 			now = Time.now
 			Timecop.freeze(now - 11) do
 				circuit.add_latency_error(rand(10))
