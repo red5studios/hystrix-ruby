@@ -37,26 +37,32 @@ describe Hystrix::Circuit do
 		end
 
 		it 'doesnt recalculate health every closed check' do
-			circuit = Hystrix::Circuit.new("test")
-			circuit.wrapped_object.should_receive(:calculate_health).once.and_call_original
 			now = Time.now
-			
-			2.times do |i|
-				Timecop.freeze(now - i) do
-					circuit.is_closed?
-				end
+			circuit = Hystrix::Circuit.new("test")
+
+			Timecop.freeze(now) do
+				circuit.wrapped_object.should_receive(:calculate_health).once
+				circuit.is_closed?
+
+				circuit.wrapped_object.last_health_check_time = now.to_f
+				circuit.is_closed?
 			end
 		end
 
 		it 'only recalculates health every X seconds' do
 			circuit = Hystrix::Circuit.new("test")
-			circuit.wrapped_object.should_receive(:calculate_health).twice.and_call_original
+			circuit.wrapped_object.should_receive(:calculate_health).twice
 			now = Time.now
-			
-			12.times do |i|
-				Timecop.freeze(now + i) do
-					circuit.is_closed?
-				end
+
+			Timecop.freeze(now) do
+				circuit.is_closed?
+
+				circuit.wrapped_object.last_health_check_time = now.to_f
+				circuit.is_closed?
+			end
+
+			Timecop.freeze(now+15) do
+				circuit.is_closed?
 			end
 		end
 

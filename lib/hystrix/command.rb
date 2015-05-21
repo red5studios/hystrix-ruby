@@ -39,13 +39,8 @@ module Hystrix
 				duration = Time.now - start_time
 
 				begin
-					if main_error.respond_to?(:cause)
-						result = fallback(main_error.cause)
-						Configuration.notify_fallback({command_name: self.class.name, executor_pool_name: executor_pool_name, duration: duration, error: main_error.cause})
-					else
-						result = fallback(main_error)
-						Configuration.notify_fallback({command_name: self.class.name, executor_pool_name: executor_pool_name, duration: duration, error: main_error})
-					end
+					result = fallback(main_error)
+					Configuration.notify_fallback({command_name: self.class.name, executor_pool_name: executor_pool_name, duration: duration, error: main_error})
 				rescue NotImplementedError => fallback_error
 					Configuration.notify_failure({command_name: self.class.name, executor_pool_name: executor_pool_name, duration: duration, error: main_error, fallback_error: fallback_error})
 					raise main_error

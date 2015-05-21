@@ -15,7 +15,7 @@ describe Hystrix::Command do
 			sleep wait
 
 			if fail
-				abort 'error'
+				raise 'error'
 			else
 				return self.string
 			end

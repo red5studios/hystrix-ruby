@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
 	s.name = %q{hystrix-ruby}
-	s.version = "0.1.0"
+	s.version = "0.1.2"
 	s.authors = ["Keith Thornhill"]
 	s.date = %q{2013-04-08}
 	s.description = %q{Hystrix for Ruby}
